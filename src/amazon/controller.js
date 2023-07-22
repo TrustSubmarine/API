@@ -3,10 +3,15 @@ const pool = require('../../db');
 const queries = require('./queries');
 
 const getProdById = (req, res) => {
-    const link_id = req.params.id;
+    const link_id = decodeURIComponent(req.params.link);
     pool.query(queries.getProdById, [link_id], (error, results) => {
-        if (error) console.log(error);
-       else res.json(results.rows);
+        if (error) {
+            console.log(error);
+        } else if (results.rows.length == 0) {
+            res.status(404);
+        } else {
+            res.json(results.rows);
+        }
     });
 };
 
