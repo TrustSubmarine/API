@@ -7,3 +7,15 @@ CREATE TABLE amazon (
     score VARCHAR(5),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+DROP TABLE amazon;
+
+CREATE TABLE amazon (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    link TEXT NOT NULL,
+    product_name TEXT NOT NULL,
+    product_desc TEXT NOT NULL,
+    score DECIMAL(2, 1) DEFAULT 0 NOT NULL,
+    updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+    is_calc BOOLEAN NOT NULL
+);
