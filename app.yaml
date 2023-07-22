@@ -1,0 +1,21 @@
+runtime: nodejs18
+env: standard
+
+instance_class: F1
+
+env_variables:
+  INSTANCE_UNIX_SOCKET: /cloudsql/durable-pulsar-388017:asia-south2:testing-submarine
+  DB_USER: postgres
+  DB_PASS: :<Hz1={0L%f5K^`"
+  DB_NAME: amazon
+  DB_INSTANCE_NAME: testing-submarine
+  CLOUD_SQL_USERNAME: postgres
+  CLOUD_SQL_PASSWORD: :<Hz1={0L%f5K^`"
+  CLOUD_SQL_DATABASE_NAME: amazon
+  CLOUD_SQL_CONNECTION_NAME: durable-pulsar-388017:asia-south2:testing-submarine
+
+# handlers:
+# - url: /.*
+#   secure: always
+#   redirect_http_response_code: 301
+#   script: auto
