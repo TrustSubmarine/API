@@ -7,7 +7,7 @@ router.get('/', controller.getAllProd);
 
 
 router
-    .route('/:id')
+    .route('/:link')
     .get(controller.getProdById)
     .post(controller.addProd)
     .put(controller.updateProdById);
