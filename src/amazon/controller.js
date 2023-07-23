@@ -59,9 +59,7 @@ const addProd = (req, res) => {
 };
 
 const updateProdById = (req, res) => {
-    const link_id = req.params.link;
-    // TODO: Make a call to the scraper to recalculate the score
-    const { score } = req.body; // TODO: is this safe?
+    const link_id = decodeURIComponent(req.params.link);
     
     pool.query(queries.getProdById, [link_id], (error, results) => {
         if (error) {
@@ -72,7 +70,28 @@ const updateProdById = (req, res) => {
         }
     });
 
-    pool.query(queries.updateProdById, [score, link_id], (error, results) => {
+    // TODO: Make a call to the scraper to recalculate the score
+    const linkUrlObject = new URL(SCRAPER_BASE_ENDPOINT);
+    const params = new URLSearchParams(linkUrlObject.search);
+    params.append("url", link_id);
+    linkUrlObject.search = params;
+
+    const reviews = axios.get(linkUrlObject.href)
+        .then(response => {
+            // handle success
+            console.log(response);
+            return response;
+        })
+        .catch(function (error) {
+            // handle error
+            console.log(error);
+            res.status(500).send("Internal Server Error: Invalid Scraper Response");
+        });
+
+    // const { score } = req.body; // TODO: is this safe?
+    
+
+    pool.query(queries.updateProdById, [3.7, encodeURIComponent(link_id)], (error, results) => {
         if (error) console.log(error);
         else res.send(`updated ${link_id}`);
     });
