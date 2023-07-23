@@ -65,8 +65,7 @@ const updateProdById = (req, res) => {
         if (error) {
             console.log(error);
         } else if (results.rows.length == 0) {
-            res.status(404);
-            res.send("Product does not exist");
+            res.status(404).send("Product does not exist");
         }
     });
 
