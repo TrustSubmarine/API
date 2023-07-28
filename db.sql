@@ -21,3 +21,6 @@ CREATE TABLE amazon (
     updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
     is_calc BOOLEAN NOT NULL
 );
+
+ALTER TABLE amazon
+ADD CONSTRAINT link_unique_constraint UNIQUE (link);

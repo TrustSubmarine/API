@@ -8,7 +8,7 @@ const MODEL_BASE_ENDPOINT = "https://morning-leaf-1132.fly.dev";
 
 const getProdById = (req, res) => {
     const link_id = decodeURIComponent(req.params.link);
-    pool.query(queries.getProdById, [link_id], (error, results) => {
+    pool.query(queries.getProdById, [link_id], async (error, results) => {
         if (error) {
             console.log(error);
         } else if (results.rows.length == 0) {
@@ -18,26 +18,38 @@ const getProdById = (req, res) => {
             params.append("url", link_id);
             linkUrlObject.search = params;
 
-            const reviews_scraped = axios.get(linkUrlObject.href)
-                .then(response => {
-                    // handle success
-                    console.log(response);
-                    return response;
-                })
-                .catch(function (error) {
-                    // handle error
-                    console.log(error);
-                    res.status(500).send("Internal Server Error: Invalid Scraper Response");
-                });
+            const reviews_scraped_response = await axios.get(linkUrlObject.href)
+                // .then(response => {
+                //     // handle success
+                //     console.log(response);
+                //     return response.data;
+                // })
+                // .catch(function (error) {
+                //     // handle error
+                //     console.log(error);
+                //     res.status(500).send("Internal Server Error: Invalid Scraper Response");
+                // });
+            const temp1 = reviews_scraped_response.data["body"];
+
+            // console.log(reviews_scraped_response["data"]); // good
+            // TODO: Needed?
+            const reviews_scraped = reviews_scraped_response["data"];
+            
+            console.log("REVIEW LOG HERE");
+            console.log(reviews_scraped);
 
             // Send reviews to the model
-            const model_res = axios.post(MODEL_BASE_ENDPOINT + "/predict", {
-                reviews: reviews_scraped["reviews"]
+            const model_res = await axios.post(MODEL_BASE_ENDPOINT + "/predict", {
+                "reviews": reviews_scraped["reviews"]
             })
-            .then(response => response)
-            .catch(error => res.status(500).send("Internal Server Error: Invalid Model Response"));
+            // .then(response => response.data)
+            // .catch(error => res.status(500).send("Internal Server Error: Invalid Model Response"));
 
-            const score = model_res["score"];
+            const score = model_res.data["score"];
+
+            console.log("----- LOGGING HERE -----");
+            console.log(reviews_scraped);
+            console.log(score);
 
             // Make a call to the post function
             pool.query(queries.addProd, [encodeURIComponent(link_id), reviews_scraped["title"], reviews_scraped["desc"], score, true], (error, results) => {
@@ -45,8 +57,8 @@ const getProdById = (req, res) => {
                 else console.log(`added ${link_id}`);
             });
 
-            res.json(reviews);
-            pool.query(queries.getProdById, [encodeURIComponent(link_id)], (error, innnerResults) => {
+            // res.json(reviews);
+            pool.query(queries.getProdById, [encodeURIComponent(link_id)], (error, innerResults) => {
                 if(error) console.log(error);
                 else res.json(innerResults.rows);
             });
@@ -91,7 +103,7 @@ const updateProdById = (req, res) => {
         .then(response => {
             // handle success
             console.log(response);
-            return response;
+            return response.data;
         })
         .catch(function (error) {
             // handle error
@@ -100,9 +112,9 @@ const updateProdById = (req, res) => {
         });
     
     const model_res = axios.post(MODEL_BASE_ENDPOINT + "/predict", {
-        reviews: reviews_scraped["reviews"]
+        reviews: reviews_scraped["body"]["reviews"]
     })
-    .then(response => response)
+    .then(response => response.data)
     .catch(error => res.status(500).send("Internal Server Error: Invalid Model Response"));
 
     const score = model_res["score"];
