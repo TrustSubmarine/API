@@ -4,6 +4,7 @@ const queries = require('./queries');
 const axios = require('axios');
 
 const SCRAPER_BASE_ENDPOINT = "https://djrjzastptdwz2ddabucffyeka0mowff.lambda-url.eu-north-1.on.aws";
+const MODEL_BASE_ENDPOINT = "https://morning-leaf-1132.fly.dev";
 
 const getProdById = (req, res) => {
     const link_id = decodeURIComponent(req.params.link);
@@ -17,7 +18,7 @@ const getProdById = (req, res) => {
             params.append("url", link_id);
             linkUrlObject.search = params;
 
-            const reviews = axios.get(linkUrlObject.href)
+            const reviews_scraped = axios.get(linkUrlObject.href)
                 .then(response => {
                     // handle success
                     console.log(response);
@@ -29,18 +30,24 @@ const getProdById = (req, res) => {
                     res.status(500).send("Internal Server Error: Invalid Scraper Response");
                 });
 
-            // TODO: send this to the model
-            // res.json(reviews);
+            // Send reviews to the model
+            const score = axios.post(MODEL_BASE_ENDPOINT + "/predict", {
+                reviews: reviews_scraped["reviews"]
+            })
+            .then(response => response)
+            .catch(error => res.status(500).send("Internal Server Error: Invalid Model Response"));
 
-            // TODO: Send reviews to model
-
-            // TODO: Make a call to the post function below
-            pool.query(queries.addProd, [encodeURIComponent(link_id), "prdo_name", "product_desco", 2.2, false], (error, results) => {
+            // Make a call to the post function
+            pool.query(queries.addProd, [encodeURIComponent(link_id), reviews_scraped["title"], reviews_scraped["desc"], score, true], (error, results) => {
                 if (error) console.log(error);
                 else console.log(`added ${link_id}`);
             });
 
             res.json(reviews);
+            pool.query(queries.getProdById, [encodeURIComponent(link_id)], (error, innnerResults) => {
+                if(error) console.log(error);
+                else res.json(innerResults.rows);
+            });
 
         } else {
             res.json(results.rows);
