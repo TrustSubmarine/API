@@ -8,7 +8,7 @@ const MODEL_BASE_ENDPOINT = "https://morning-leaf-1132.fly.dev";
 
 const getProdById = (req, res) => {
     const link_id = decodeURIComponent(req.params.link);
-    pool.query(queries.getProdById, [link_id], async (error, results) => {
+    pool.query(queries.getProdById, [encodeURIComponent(link_id)], async (error, results) => {
         if (error) {
             console.log(error);
         } else if (results.rows.length == 0) {
@@ -80,48 +80,56 @@ const addProd = (req, res) => {
     });
 };
 
-const updateProdById = (req, res) => {
+const updateProdById = async (req, res) => {
     const link_id = decodeURIComponent(req.params.link);
 
-
-    
-    pool.query(queries.getProdById, [link_id], (error, results) => {
+    pool.query(queries.getProdById, [encodeURIComponent(link_id)], async (error, results) => {
         if (error) {
             console.log(error);
-        } else if (results.rows.length == 0) {
+        // } else if (results.rows.length == 0) {
+        } else if (results["rows"].length == 0) {
+            console.log("LOGGING RESULTS FROM UPDATE HERE");
+            console.log(results);
+            console.log(results.rows);
             res.status(404).send("Product does not exist");
+        } else {
+        
+            // TODO: Make a call to the scraper to recalculate the score
+            const linkUrlObject = new URL(SCRAPER_BASE_ENDPOINT);
+            const params = new URLSearchParams(linkUrlObject.search);
+            params.append("url", link_id);
+            linkUrlObject.search = params;
+            
+            const reviews_scraped_response = await axios.get(linkUrlObject.href)
+            // .then(response => {
+                //     // handle success
+                //     console.log(response);
+                //     return response.data;
+                // })
+                    // .catch(function (error) {
+                        //     // handle error
+                        //     console.log(error);
+                        //     res.status(500).send("Internal Server Error: Invalid Scraper Response");
+                        // });
+                        const temp1 = reviews_scraped_response.data["body"];
+                        
+                        // console.log(reviews_scraped_response["data"]); // good
+                        // TODO: Needed?
+                        const reviews_scraped = reviews_scraped_response["data"];
+                        
+                        const model_res = await axios.post(MODEL_BASE_ENDPOINT + "/predict", {
+                            "reviews": reviews_scraped["reviews"]
+                        })
+            // .then(response => response.data)
+            // .catch(error => res.status(500).send("Internal Server Error: Invalid Model Response"));
+            
+            const score = model_res.data["score"];
+            
+            pool.query(queries.updateProdById, [score, encodeURIComponent(link_id)], (error, results) => {
+                if (error) console.log(error);
+                else res.send(`updated ${link_id}`);
+            });
         }
-    });
-
-    // TODO: Make a call to the scraper to recalculate the score
-    const linkUrlObject = new URL(SCRAPER_BASE_ENDPOINT);
-    const params = new URLSearchParams(linkUrlObject.search);
-    params.append("url", link_id);
-    linkUrlObject.search = params;
-
-    const reviews_scraped = axios.get(linkUrlObject.href)
-        .then(response => {
-            // handle success
-            console.log(response);
-            return response.data;
-        })
-        .catch(function (error) {
-            // handle error
-            console.log(error);
-            res.status(500).send("Internal Server Error: Invalid Scraper Response");
-        });
-    
-    const model_res = axios.post(MODEL_BASE_ENDPOINT + "/predict", {
-        reviews: reviews_scraped["body"]["reviews"]
-    })
-    .then(response => response.data)
-    .catch(error => res.status(500).send("Internal Server Error: Invalid Model Response"));
-
-    const score = model_res["score"];
-
-    pool.query(queries.updateProdById, [score, encodeURIComponent(link_id)], (error, results) => {
-        if (error) console.log(error);
-        else res.json(`updated ${link_id}`);
     });
 };
 
