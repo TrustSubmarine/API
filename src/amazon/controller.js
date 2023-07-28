@@ -31,11 +31,13 @@ const getProdById = (req, res) => {
                 });
 
             // Send reviews to the model
-            const score = axios.post(MODEL_BASE_ENDPOINT + "/predict", {
+            const model_res = axios.post(MODEL_BASE_ENDPOINT + "/predict", {
                 reviews: reviews_scraped["reviews"]
             })
             .then(response => response)
             .catch(error => res.status(500).send("Internal Server Error: Invalid Model Response"));
+
+            const score = model_res["score"];
 
             // Make a call to the post function
             pool.query(queries.addProd, [encodeURIComponent(link_id), reviews_scraped["title"], reviews_scraped["desc"], score, true], (error, results) => {
@@ -97,12 +99,13 @@ const updateProdById = (req, res) => {
             res.status(500).send("Internal Server Error: Invalid Scraper Response");
         });
     
-    const score = axios.post(MODEL_BASE_ENDPOINT + "/predict", {
+    const model_res = axios.post(MODEL_BASE_ENDPOINT + "/predict", {
         reviews: reviews_scraped["reviews"]
     })
     .then(response => response)
     .catch(error => res.status(500).send("Internal Server Error: Invalid Model Response"));
-    
+
+    const score = model_res["score"];
 
     pool.query(queries.updateProdById, [score, encodeURIComponent(link_id)], (error, results) => {
         if (error) console.log(error);
