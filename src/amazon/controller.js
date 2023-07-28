@@ -106,7 +106,7 @@ const updateProdById = (req, res) => {
 
     pool.query(queries.updateProdById, [score, encodeURIComponent(link_id)], (error, results) => {
         if (error) console.log(error);
-        else console.log(`updated ${link_id}`);
+        else res.json(`updated ${link_id}`);
     });
 };
 
