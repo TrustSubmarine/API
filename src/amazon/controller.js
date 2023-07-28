@@ -55,6 +55,7 @@ const getProdById = (req, res) => {
     });
 };
 
+// FIXME: Potentially redundant endpoint, consider NOT exposing
 const addProd = (req, res) => {
     const link_id = req.params.link;
     // TODO: Make a call to the scraper here and get everything
@@ -67,6 +68,8 @@ const addProd = (req, res) => {
 
 const updateProdById = (req, res) => {
     const link_id = decodeURIComponent(req.params.link);
+
+
     
     pool.query(queries.getProdById, [link_id], (error, results) => {
         if (error) {
@@ -82,7 +85,7 @@ const updateProdById = (req, res) => {
     params.append("url", link_id);
     linkUrlObject.search = params;
 
-    const reviews = axios.get(linkUrlObject.href)
+    const reviews_scraped = axios.get(linkUrlObject.href)
         .then(response => {
             // handle success
             console.log(response);
@@ -93,13 +96,17 @@ const updateProdById = (req, res) => {
             console.log(error);
             res.status(500).send("Internal Server Error: Invalid Scraper Response");
         });
-
-    // const { score } = req.body; // TODO: is this safe?
+    
+    const score = axios.post(MODEL_BASE_ENDPOINT + "/predict", {
+        reviews: reviews_scraped["reviews"]
+    })
+    .then(response => response)
+    .catch(error => res.status(500).send("Internal Server Error: Invalid Model Response"));
     
 
-    pool.query(queries.updateProdById, [3.7, encodeURIComponent(link_id)], (error, results) => {
+    pool.query(queries.updateProdById, [score, encodeURIComponent(link_id)], (error, results) => {
         if (error) console.log(error);
-        else res.send(`updated ${link_id}`);
+        else console.log(`updated ${link_id}`);
     });
 };
 
