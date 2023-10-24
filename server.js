@@ -6,7 +6,7 @@ const app = express();
 // app.set('view engine', 'ejs')
 app.use(express.json())
 
-// middleware for access, check security for this
+// middleware for access
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader(
@@ -17,6 +17,7 @@ app.use((req, res, next) => {
     next();
 });
 
+// test easter egg for zhi hong
 app.get('/', (req, res) => {
     res.send('hi zhi hong!')
 })
