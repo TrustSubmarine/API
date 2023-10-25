@@ -2,8 +2,8 @@ const pool = require('../../db');
 const queries = require('./queries');
 const axios = require('axios');
 
-const SCRAPER_BASE_ENDPOINT = "https://djrjzastptdwz2ddabucffyeka0mowff.lambda-url.eu-north-1.on.aws";
-const MODEL_BASE_ENDPOINT = "https://morning-leaf-1132.fly.dev";
+const SCRAPER_BASE_ENDPOINT = process.env.SCRAPER_BASE_ENDPOINT;
+const MODEL_BASE_ENDPOINT = process.env.MODEL_BASE_ENDPOINT;
 
 const getProdById = (req, res) => {
     const link_id = decodeURIComponent(req.params.link);

@@ -1,3 +1,4 @@
 dbconfig.js
 durable*.json
 node_modules
+app.yaml
